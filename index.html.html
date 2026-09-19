@@ -65,7 +65,7 @@ body{background:radial-gradient(circle at 50% -10%,#123d70 0,#071a31 36%,#061326
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body><div class="splash" id="splash" onclick="this.classList.add('hide')"><span class="spark s1"></span><span class="spark s2"></span><span class="spark s3"></span><div class="stadium-line"></div><div class="ball-stage"><div class="ball-shadow"></div><div class="matchball" aria-label="Bola de futebol"><svg viewBox="0 0 200 200" role="img"><defs><radialGradient id="ballBase" cx="32%" cy="22%" r="76%"><stop offset="0" stop-color="#fff"/><stop offset=".42" stop-color="#f3f6f8"/><stop offset=".78" stop-color="#cbd3d9"/><stop offset="1" stop-color="#81909b"/></radialGradient><radialGradient id="shine" cx="35%" cy="25%" r="55%"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient><clipPath id="ballClip"><circle cx="100" cy="100" r="89"/></clipPath></defs><circle cx="100" cy="100" r="91" fill="#53616b"/><circle cx="100" cy="100" r="88" fill="url(#ballBase)"/><g clip-path="url(#ballClip)" stroke="#6f7a82" stroke-width="3" fill="none"><path d="M100 72 69 93 81 130 119 130 131 93Z"/><path d="M69 93 39 69 48 35M131 93l30-24-9-34M81 130l-23 31 16 31M119 130l23 31-16 31M39 69 9 91M161 69l30 22"/><path d="M48 35 79 10M152 35 121 10M58 161l-43-5M142 161l43-5"/></g><g fill="#16222c"><path d="M100 69 68 92 80 131 120 131 132 92Z"/><path d="M47 32 22 46 9 80 38 70 57 43Z"/><path d="M153 32 178 46 191 80 162 70 143 43Z"/><path d="M57 158 32 181 70 197 79 172Z"/><path d="M143 158 168 181 130 197 121 172Z"/></g><ellipse cx="70" cy="52" rx="42" ry="29" fill="url(#shine)"/></svg></div></div><h1>PELADINHA</h1><p>Seu jogo. Seus times. Sua história.</p><div class="tap">Toque para entrar em campo</div></div>
-<header class="top"><div><div class="brand" onclick="voltarMinhasPeladas()" style="cursor:pointer" title="Trocar de pelada"><span class="brand-mark">⚽</span> PELADINHA</div><div class="pill" id="pageTitle">Pelada</div></div></header>
+<header class="top"><div><div class="brand" onclick="voltarMinhasPeladas()" style="cursor:pointer" title="Trocar de pelada"><span class="brand-mark">⚽</span> PELADINHA</div><div class="pill" id="pageTitle">Pelada</div></div><button id="backBtn" class="btn btn-secondary" style="width:auto;padding:9px 14px;display:none" onclick="voltarMinhasPeladas()">← Voltar</button></header>
 <main class="wrap" id="app"></main>
 <nav class="nav" id="nav">
 <button data-tab="pelada" class="active"><b>🏠</b>Pelada</button>
@@ -541,6 +541,7 @@ function abrirPelada(peladaId,peladaMeta){
   clearInterval(timerHandle);
   tab='pelada';matchStep=state.paymentDraft?'payment':'select';selected=new Set();teams=state.preparedTeams||{a:[],b:[]};chamadaPresentes=new Set();
   document.getElementById('nav').style.display='';
+  document.getElementById('backBtn').style.display='';
   if(!navBound){
     navBound=true;
     $('#nav').addEventListener('click',e=>{const b=e.target.closest('button[data-tab]');if(b){tab=b.dataset.tab;if(tab==='partida'&&!state.activeMatch)matchStep='select';render()}})
@@ -561,6 +562,7 @@ async function migrarPeladaAntiga(){
 }
 async function mostrarMinhasPeladas(){
   document.getElementById('nav').style.display='none';
+  document.getElementById('backBtn').style.display='none';
   $('#pageTitle').textContent='Minhas peladas';
   $('#app').innerHTML='<div class="empty" style="padding:40px 0">Carregando suas peladas...</div>';
   const{data,error}=await sb.from('peladas').select('*').order('criado_em');
