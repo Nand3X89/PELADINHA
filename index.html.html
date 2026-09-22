@@ -28,7 +28,7 @@
 .cmp-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--surface2)}
 .cmp-fill{height:100%}
 .cmp-fill.left{background:var(--a);border-radius:999px 0 0 999px}
-.cmp-fill.right{background:var(--b);border-radius:0 999px 999px 0}
+.cmp-fill.right{background:var(--b);border-radius:0 999px 999px 0}.cmp-verdict{background:linear-gradient(135deg,#2a1f00,#3d2c00);border:1px solid #ffd76a;border-radius:14px;padding:12px;text-align:center;font-weight:800;color:#ffd76a;margin-bottom:18px}
 
 .profile-body{padding:58px 22px 24px;text-align:center}
 .profile-body h2{margin:0 0 6px;font-family:"Rajdhani",sans-serif;font-size:25px;font-weight:800}
@@ -275,8 +275,26 @@ window.mostrarComparacao=(id1,id2)=>{
     cmpRow('✅','Pênaltis convertidos',pen1.scored,pen2.scored),
     cmpRow('❌','Pênaltis perdidos',pen1.missed,pen2.missed)
   ];
+  let veredito='',formula='';
+  if(isGK){
+    formula='Critério: menor média de gols sofridos por partida (mesmo do Muralha do mês). Empate na média desempata por mais partidas defendidas.';
+    if(s1.goalieMatches||s2.goalieMatches){
+      let venc=null;
+      if(media1!==media2)venc=media1<media2?p1:p2;
+      else if(s1.goalieMatches!==s2.goalieMatches)venc=s1.goalieMatches>s2.goalieMatches?p1:p2;
+      veredito=venc?`🏆 ${esc(venc.name)} tem o melhor rendimento`:'⚖️ Empate técnico — sem dados suficientes pra decidir';
+    }else veredito='Nenhum dos dois tem partidas como goleiro registradas ainda.';
+  }else{
+    const idx1=s1.matches?+((s1.goals+s1.assists)/s1.matches*10+ap1).toFixed(1):0;
+    const idx2=s2.matches?+((s2.goals+s2.assists)/s2.matches*10+ap2).toFixed(1):0;
+    formula=`Índice de rendimento: ((gols + assistências) ÷ partidas × 10) + % de vitórias. ${esc(p1.name)}: ${idx1} · ${esc(p2.name)}: ${idx2}`;
+    if(idx1||idx2){
+      const venc=idx1>idx2?p1:idx2>idx1?p2:null;
+      veredito=venc?`🏆 ${esc(venc.name)} tem o melhor rendimento`:'⚖️ Empate técnico no rendimento geral';
+    }else veredito='Nenhum dos dois tem partidas suficientes pra calcular ainda.';
+  }
   document.getElementById('compareOverlay')?.remove();
-  document.body.insertAdjacentHTML('beforeend',`<div class="profile-overlay" id="compareOverlay" onclick="if(event.target.id==='compareOverlay')fecharComparacao()"><div class="profile-card" style="max-width:400px"><div class="profile-body" style="padding-top:24px"><button class="profile-close" style="position:absolute;top:14px;right:14px;background:var(--surface2)" onclick="fecharComparacao()">✕</button><div class="small" style="text-align:center">COMPARAÇÃO DE JOGADORES</div><div class="cmp-heads"><div class="cmp-head">${avatarHTML(p1)}<strong>${esc(p1.name)}</strong><div class="stars">${stars(p1.rating)}</div></div><div class="cmp-vs">×</div><div class="cmp-head">${avatarHTML(p2)}<strong>${esc(p2.name)}</strong><div class="stars">${stars(p2.rating)}</div></div></div>${linhas.join('')}<button class="btn btn-secondary" style="width:100%;margin-top:16px" onclick="fecharComparacao()">Fechar</button></div></div></div>`);
+  document.body.insertAdjacentHTML('beforeend',`<div class="profile-overlay" id="compareOverlay" onclick="if(event.target.id==='compareOverlay')fecharComparacao()"><div class="profile-card" style="max-width:400px"><div class="profile-body" style="padding-top:24px"><button class="profile-close" style="position:absolute;top:14px;right:14px;background:var(--surface2)" onclick="fecharComparacao()">✕</button><div class="small" style="text-align:center">COMPARAÇÃO DE JOGADORES</div><div class="cmp-heads"><div class="cmp-head">${avatarHTML(p1)}<strong>${esc(p1.name)}</strong><div class="stars">${stars(p1.rating)}</div></div><div class="cmp-vs">×</div><div class="cmp-head">${avatarHTML(p2)}<strong>${esc(p2.name)}</strong><div class="stars">${stars(p2.rating)}</div></div></div><div class="cmp-verdict">${veredito}</div>${linhas.join('')}<p class="small muted" style="margin-top:6px">${formula}</p><button class="btn btn-secondary" style="width:100%;margin-top:16px" onclick="fecharComparacao()">Fechar</button></div></div></div>`);
 };
 function playerForm(p={}){pendingPhoto=p.photo||null;return `<section class="card"><h2>${p.id?'Editar':'Adicionar'} jogador</h2><div class="formgrid"><label class="field full">Nome<input id="pName" value="${esc(p.name||'')}"></label><label class="field full">Foto de perfil<div class="photo-field"><span class="photo-preview">${p.photo?`<img src="${esc(p.photo)}" alt="Foto de ${esc(p.name||'jogador')}">`:esc(initials(p.name))}</span><input id="pPhoto" type="file" accept="image/*" onchange="loadPlayerPhoto(this)"></div></label><label class="field">Estrelas<select id="pRating">${[1,2,3,4,5].map(n=>`<option ${+p.rating===n?'selected':''} value="${n}">${n} estrela${n>1?'s':''}</option>`).join('')}</select></label><label class="field">Posição<select id="pPos">${['Goleiro','Zagueiro','Meio-campo','Atacante'].map(x=>`<option ${p.position===x?'selected':''}>${x}</option>`).join('')}</select></label></div><div class="row" style="margin-top:12px"><button class="btn btn-primary" onclick="savePlayer('${p.id||''}')">Salvar jogador</button>${p.id?`<button class="btn btn-danger" onclick="deletePlayer('${p.id}')">Excluir</button>`:''}</div></section>`}
 function renderPlayers(editId=''){const p=state.players.find(x=>x.id===editId); $('#app').innerHTML=playerForm(p)+`<section class="card"><div class="row space"><h2>Jogadores</h2><span class="tag">${state.players.length}</span></div>${state.players.length?state.players.map(x=>`<button class="player" style="width:100%;margin-top:8px" onclick="abrirPerfil('${x.id}')"><strong>${esc(x.name)}</strong><span class="small">${esc(x.position)} · </span><span class="stars">${stars(x.rating)}</span><span class="small" style="display:block">${x.stats?.goals||0} gols · ${x.stats?.wins||0} vitórias</span></button>`).join(''):'<div class="empty">Nenhum jogador cadastrado.</div>'}</section>`}
