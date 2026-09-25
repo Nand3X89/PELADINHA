@@ -28,7 +28,18 @@
 .cmp-bar{display:flex;height:8px;border-radius:999px;overflow:hidden;background:var(--surface2)}
 .cmp-fill{height:100%}
 .cmp-fill.left{background:var(--a);border-radius:999px 0 0 999px}
-.cmp-fill.right{background:var(--b);border-radius:0 999px 999px 0}.cmp-verdict{background:linear-gradient(135deg,#2a1f00,#3d2c00);border:1px solid #ffd76a;border-radius:14px;padding:12px;text-align:center;font-weight:800;color:#ffd76a;margin-bottom:18px}
+.cmp-fill.right{background:var(--b);border-radius:0 999px 999px 0}
+.carousel{margin-top:16px}
+.carousel-slide{display:none;text-align:center}
+.carousel-slide.active{display:block;animation:fadeSlide .35s ease}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.slide-preview{background:var(--surface2);border:1px solid var(--line);border-radius:14px;padding:16px;min-height:100px;display:flex;align-items:center;justify-content:center}
+.carousel-slide h3{margin:12px 0 4px;font-size:15px}
+.carousel-dots{display:flex;justify-content:center;gap:6px;margin-top:12px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--line);cursor:pointer}
+.dot.active{background:#ffd76a;width:18px;border-radius:4px;transition:.25s}
+.mini-pelada{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 12px;text-align:left;font-size:12px;font-weight:800;margin-bottom:6px}
+.cmp-verdict{background:linear-gradient(135deg,#2a1f00,#3d2c00);border:1px solid #ffd76a;border-radius:14px;padding:12px;text-align:center;font-weight:800;color:#ffd76a;margin-bottom:18px}
 
 .profile-body{padding:58px 22px 24px;text-align:center}
 .profile-body h2{margin:0 0 6px;font-family:"Rajdhani",sans-serif;font-size:25px;font-weight:800}
@@ -487,11 +498,37 @@ function abrirPaywallModal(titulo,desc,bullets){
   document.body.insertAdjacentHTML('beforeend',`<div class="profile-overlay" id="paywallOverlay" onclick="if(event.target.id==='paywallOverlay')fecharPaywall()"><div class="profile-card gold-frame" style="max-width:380px"><div class="profile-banner" style="background:linear-gradient(135deg,#7a5200 0%,#c8860a 45%,#3d2900 100%)"><button class="profile-close" onclick="fecharPaywall()">✕</button></div><div class="profile-body" style="padding-top:24px;text-align:center"><div style="font-size:46px">🔒</div><div class="small" style="color:#ffd76a;margin-top:6px">RECURSO PRO</div><h2 style="margin-top:4px">${esc(titulo)}</h2><p class="muted">${esc(desc)}</p>${bullets?`<ul style="text-align:left;margin:12px auto 0;max-width:270px;color:var(--muted);font-size:13px;line-height:1.7">${bullets.map(b=>`<li>${esc(b)}</li>`).join('')}</ul>`:''}<button class="btn" style="width:100%;margin-top:18px;background:linear-gradient(135deg,#ffe08a,#c8860a);color:#2a1f00;font-weight:900" onclick="mostrarPlanos()">🔓 Assinar PRO — ${PRO_PRECO}</button><button class="btn btn-secondary" style="width:100%;margin-top:10px" onclick="fecharPaywall()">Agora não</button></div></div></div>`);
 }
 window.fecharPaywall=()=>{document.getElementById('paywallOverlay')?.remove()};
+let planSlideIdx=0,planSlideTimer=null;
+function planSlides(){return [
+  {titulo:'Várias peladas, uma conta só',texto:'Organize a Arena Andrade, a Pelada do Parque e a Quadra IFMA — cada uma com seus próprios jogadores e estatísticas.',preview:`<div style="width:100%"><div class="mini-pelada">⚽ Arena Andrade</div><div class="mini-pelada">⚽ Pelada do Parque</div><div class="mini-pelada">⚽ Quadra IFMA</div></div>`},
+  {titulo:'Ranking automático, mês a mês',texto:'Artilheiro, garçom e muralha calculados sozinhos, com pódio e histórico por temporada.',preview:`<div style="display:flex;justify-content:center;gap:16px;align-items:flex-end;width:100%"><div style="text-align:center"><div style="font-size:20px">🥈</div><span class="player-avatar" style="margin:4px auto">P</span><strong style="font-size:10px;display:block">Pedro</strong></div><div style="text-align:center"><div style="font-size:26px">🥇</div><span class="player-avatar gold" style="margin:4px auto">J</span><strong style="font-size:10px;display:block">João</strong></div><div style="text-align:center"><div style="font-size:20px">🥉</div><span class="player-avatar" style="margin:4px auto">L</span><strong style="font-size:10px;display:block">Lucas</strong></div></div>`},
+  {titulo:'Compare jogadores',texto:'Gols, assistências, pênaltis e até um veredito de quem tem o melhor rendimento — direto no perfil.',preview:`<div style="width:100%"><div class="cmp-heads" style="margin:0 0 10px"><div class="cmp-head"><span class="player-avatar">J</span><strong style="font-size:10px">João</strong></div><div class="cmp-vs">×</div><div class="cmp-head"><span class="player-avatar">P</span><strong style="font-size:10px">Pedro</strong></div></div><div class="cmp-row" style="margin-bottom:6px"><div class="cmp-vals"><strong>18</strong><span>⚽ Gols</span><strong>8</strong></div><div class="cmp-bar"><div class="cmp-fill left" style="width:69%"></div><div class="cmp-fill right" style="width:31%"></div></div></div></div>`},
+  {titulo:'Lista de presença no WhatsApp',texto:'Manda o link no grupo — cada um confirma tocando no próprio nome, sem zoeira de "vou sim/vou não" na conversa.',preview:`<div style="width:100%;background:#0b141a;border-radius:12px;padding:10px;text-align:left"><div style="background:#005c4b;color:#fff;padding:7px 10px;border-radius:10px;font-size:10px;max-width:85%;margin-left:auto">⚽ Pelada sábado — confirme: peladinha.app/convite</div><div style="background:#202c33;color:#fff;padding:7px 10px;border-radius:10px;font-size:10px;max-width:55%;margin-top:6px">✅ Vou!</div></div>`}
+]}
+function iniciarCarrossel(){
+  clearInterval(planSlideTimer);
+  planSlideTimer=setInterval(()=>{
+    const slides=document.querySelectorAll('#planCarousel .carousel-slide');
+    if(!slides.length)return;
+    planSlideIdx=(planSlideIdx+1)%slides.length;
+    slides.forEach((s,i)=>s.classList.toggle('active',i===planSlideIdx));
+    document.querySelectorAll('#planCarousel .dot').forEach((d,i)=>d.classList.toggle('active',i===planSlideIdx));
+  },3200);
+}
+window.irParaSlide=i=>{
+  planSlideIdx=i;clearInterval(planSlideTimer);
+  document.querySelectorAll('#planCarousel .carousel-slide').forEach((s,idx)=>s.classList.toggle('active',idx===i));
+  document.querySelectorAll('#planCarousel .dot').forEach((d,idx)=>d.classList.toggle('active',idx===i));
+  iniciarCarrossel();
+};
 window.mostrarPlanos=()=>{
   fecharPaywall();
-  document.body.insertAdjacentHTML('beforeend',`<div class="profile-overlay" id="planosOverlay" onclick="if(event.target.id==='planosOverlay')fecharPlanos()"><div class="profile-card" style="max-width:400px"><div class="profile-body" style="padding-top:24px"><button class="profile-close" style="position:absolute;top:14px;right:14px;background:var(--surface2)" onclick="fecharPlanos()">✕</button><div class="small" style="text-align:center">PLANOS</div><h2 style="text-align:center;margin-top:4px">PELADINHA PRO</h2><div class="row space" style="margin-top:16px"><strong>${PRO_PRECO}</strong></div><ul style="margin-top:10px;color:var(--muted);font-size:14px;line-height:1.9"><li>Até 5 peladas na mesma conta</li><li>Jogadores ilimitados por pelada</li><li>Ranking e temporada completos</li><li>Modo comparação entre jogadores</li><li>Link de confirmação no WhatsApp</li></ul><button class="btn" style="width:100%;margin-top:18px;background:linear-gradient(135deg,#ffe08a,#c8860a);color:#2a1f00;font-weight:900" onclick="alert('Assinatura ainda não está disponível — em breve por aqui mesmo!')">Assinar agora</button><p class="small muted" style="text-align:center;margin-top:10px">Cobrança ainda não está ativa. Essa tela é só uma prévia de como vai funcionar.</p></div></div></div>`);
+  planSlideIdx=0;
+  const slides=planSlides();
+  document.body.insertAdjacentHTML('beforeend',`<div class="profile-overlay" id="planosOverlay" onclick="if(event.target.id==='planosOverlay')fecharPlanos()"><div class="profile-card" style="max-width:400px"><div class="profile-body" style="padding-top:24px"><button class="profile-close" style="position:absolute;top:14px;right:14px;background:var(--surface2)" onclick="fecharPlanos()">✕</button><div class="small" style="text-align:center">PLANOS</div><h2 style="text-align:center;margin-top:4px">PELADINHA PRO</h2><div class="carousel" id="planCarousel">${slides.map((s,i)=>`<div class="carousel-slide${i===0?' active':''}"><div class="slide-preview">${s.preview}</div><h3>${esc(s.titulo)}</h3><p class="muted small">${esc(s.texto)}</p></div>`).join('')}<div class="carousel-dots">${slides.map((_,i)=>`<span class="dot${i===0?' active':''}" onclick="irParaSlide(${i})"></span>`).join('')}</div></div><div class="row space" style="margin-top:18px"><strong>${PRO_PRECO}</strong></div><button class="btn" style="width:100%;margin-top:12px;background:linear-gradient(135deg,#ffe08a,#c8860a);color:#2a1f00;font-weight:900" onclick="alert('Assinatura ainda não está disponível — em breve por aqui mesmo!')">Assinar agora</button><p class="small muted" style="text-align:center;margin-top:10px">Cobrança ainda não está ativa. Essa tela é só uma prévia de como vai funcionar.</p></div></div></div>`);
+  iniciarCarrossel();
 };
-window.fecharPlanos=()=>{document.getElementById('planosOverlay')?.remove()};
+window.fecharPlanos=()=>{clearInterval(planSlideTimer);document.getElementById('planosOverlay')?.remove()};
 function championshipCounts(playerId){
   let artilheiro=0,garcom=0,muralha=0;
   allSeasonKeys().forEach(key=>{
