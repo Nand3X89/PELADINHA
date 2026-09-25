@@ -815,7 +815,13 @@ async function bootstrap(){
   if(urlConvite){iniciarPaginaConfirmacao(urlConvite);return}
   sb.auth.onAuthStateChange((event,session)=>{
     authUser=session?.user||null;
-    if(authUser)iniciarApp();else if(!appStarted){renderAuth()}
+    if(authUser)iniciarApp();
+    else if(!appStarted){
+      // LOGIN DESLIGADO TEMPORARIAMENTE: em vez de mostrar a tela de login,
+      // entra sozinho com uma sessão anônima do Supabase. Pra voltar o login
+      // de verdade, troque a linha abaixo de volta pra: renderAuth()
+      sb.auth.signInAnonymously().catch(err=>{console.error('Login anônimo falhou:',err);renderAuth()});
+    }
   });
 }
 bootstrap();
